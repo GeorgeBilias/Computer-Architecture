@@ -1,0 +1,28 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity D_FF is
+    Port (
+        D : in STD_LOGIC;
+        clk : in STD_LOGIC;
+        en : in STD_LOGIC;
+        Q : out STD_LOGIC
+    );
+end D_FF;
+
+architecture STRUCTURAL of D_FF is
+    signal Q_next : STD_LOGIC; -- Intermediate signal to hold the next state
+begin
+    -- Flip-Flop behavior
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if en = '1' then
+                Q_next <= D;
+            end if;
+        end if;
+    end process;
+
+    Q <= Q_next; -- Assign the next state to the output
+
+end STRUCTURAL;
