@@ -1,0 +1,33 @@
+package FLIPFLOP1BIT_Components is
+
+--and 
+component and_gate2 is
+port(x1,x2 : in std_logic;
+	  compOut: out std_logic
+	  );
+end component;
+
+--not 
+
+component not_gate2 is
+port(x1 : in std_logic;
+	  compOut : out std_logic
+	  );
+end component;
+
+--nand
+
+component nand_gate is
+port(x1,x2 : in std_logic;
+	  compOut : out std_logic
+	  );
+end component;
+
+component FLIPFLOP1BIT is
+    port(
+        input, Clock, Enable: in std_logic;
+        output: out std_logic
+    );
+end component;
+
+end package FLIPFLOP1BIT_Components;

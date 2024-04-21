@@ -1,0 +1,34 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+--PACKAGE OF COMPONENTS
+
+package ALU_16BIT_Components is
+
+-- Control Circuit
+
+component ControlCircuit is
+ port(opcode: in std_logic_vector(2 downto 0);
+      I1_Invert,I2_Invert: out std_logic;
+		Operation: out std_logic_vector(2 downto 0);
+	   CarryIn: out std_logic);
+end component;
+
+-- 16 bit ALU
+
+component ALU_16BIT is
+ port(I1_array,I2_array: in std_logic_vector(15 downto 0);
+      opcode: in std_logic_vector(2 downto 0);
+		Result: out std_logic_vector(15 downto 0);
+		Overflow: out std_logic);
+end component;
+
+-- Component used for not and Geq
+
+component mux_16 is 
+	port(I1_array : in std_logic_vector(15 downto 0);
+		  Operation : in std_logic_vector(2 downto 0);
+		  Result: out std_logic_vector(15 downto 0));		  
+end component;
+
+end package ALU_16BIT_Components;

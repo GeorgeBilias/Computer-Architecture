@@ -1,0 +1,93 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+--PACKAGE OF COMPONENTS
+
+package ALU_1BIT_Components is
+
+--NOT I1 Component
+
+component NOT_I1 is
+ port(I1 : in std_logic;
+      notI1 :out std_logic);
+end  component;
+
+--NOT I2 Component
+
+component NOT_I2 is
+ port(I2 : in std_logic;
+      notI2 :out std_logic);
+end  component;
+
+--AND Gate Component
+
+component AND_Gate is
+ port(final_I1,final_I2 : in std_logic;
+      outAND : out std_logic);
+end component;
+
+--0R Gate Component
+
+component OR_Gate is
+ port(final_I1,final_I2 : in std_logic;
+      outOR : out std_logic);
+end component;
+
+--XOR Gate Component
+
+component XOR_Gate is
+ port(final_I1,final_I2 : in std_logic;
+      outXOR : out std_logic);
+end component;
+
+--mux2to1_I1 component
+
+component mux2to1_I1 is
+ port(I1,notI1 : in std_logic;
+      I1_Invert: in std_logic;
+		final_I1: out std_logic);
+end component;
+
+--mux2to1_I2 component
+
+component mux2to1_I2 is
+ port(I2,notI2 : in std_logic;
+      I2_Invert: in std_logic;
+		final_I2: out std_logic);
+end component;
+
+--FULL ADDER Component
+
+component FULL_ADDER is
+ port(CarryIn,final_I1,final_I2 : in std_logic;
+      sum,CarryOut : out std_logic);
+end component;
+
+component NOT0 is
+ port(I1: in std_logic;
+      outNOT0: out std_logic);
+end component;
+
+component norm is
+ port(I1: in std_logic;
+      out_norm: out std_logic);
+end component;
+
+
+--Multiplexer 4to1 for ALU Component
+
+component mux4to1 is
+ port(outAND,outOR,sum,outXOR,outNOT0,out_norm : in std_logic;
+      Operation : in std_logic_vector(2 downto 0);
+      Result: out std_logic);
+end component;
+
+--1 BIT ALU Component
+
+component ALU_1BIT is
+ port(I1,I2,CarryIn,I1_Invert,I2_Invert : in std_logic;
+		Operation:in std_logic_vector(2 downto 0);
+      Result,CarryOut: out std_logic);
+end component;
+
+end ALU_1BIT_Components;
