@@ -15,7 +15,7 @@ end component;
 
 end components3;
 
-library ieee;s
+library ieee;
 use ieee.std_logic_1164.all;
 use work.components.all;
 use work.components2.all;
@@ -33,13 +33,13 @@ end entity MULTICYCLECIRCUIT;
 architecture AR_MULTICYCLECIRCUIT of MULTICYCLECIRCUIT is
 
 signal FF1_out,FF2_out,FF3_out,ALU_Result : std_logic_vector(15 downto 0);
-signal ALU_Overflow,ALU_Flag: std_logic;
+signal ALU_Overflow: std_logic;
 
 begin
 
 FF_1: FLIPFLOP16BIT port map(Input1,Clock,Enable,FF1_out);
 FF_2: FLIPFLOP16BIT port map(Input2,Clock,Enable,FF2_out);
-ALU_1: ALU_16BIT port map(FF1_out,FF2_out,Operation,ALU_Result,ALU_Overflow,ALU_Flag);
+ALU_1: ALU_16BIT port map(FF1_out,FF2_out,Operation,ALU_Result,ALU_Overflow);
 FF_3: FLIPFLOP16BIT port map(ALU_Result,Clock,Enable,FF3_out);
 
 ALUout <= ALU_Result;

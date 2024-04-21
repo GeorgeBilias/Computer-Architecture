@@ -63,24 +63,21 @@ component FULL_ADDER is
       sum,CarryOut : out std_logic);
 end component;
 
---GEQ Component
-
---component GEQ is
--- port(I1: in std_logic_vector(15 downto 0);
---		outGEQ: out std_logic_vector(15 downto 0));
---end component;
-
---NOT Component
-
-component NOT_Gate is
- port(I1,flagIn: in std_logic;
-		outNOT,flagOut: out std_logic);
+component NOT0 is
+ port(I1: in std_logic;
+      outNOT0: out std_logic);
 end component;
+
+component norm is
+ port(I1: in std_logic;
+      out_norm: out std_logic);
+end component;
+
 
 --Multiplexer 4to1 for ALU Component
 
 component mux4to1 is
- port(outAND,outOR,sum,outXOR,outNOT : in std_logic;
+ port(outAND,outOR,sum,outXOR,outNOT0,out_norm : in std_logic;
       Operation : in std_logic_vector(2 downto 0);
       Result: out std_logic);
 end component;
@@ -88,23 +85,35 @@ end component;
 --1 BIT ALU Component
 
 component ALU_1BIT is
- port(I1,I2,CarryIn,I1_Invert,I2_Invert,flagIn : in std_logic;
+ port(I1,I2,CarryIn,I1_Invert,I2_Invert : in std_logic;
 		Operation:in std_logic_vector(2 downto 0);
-      Result,CarryOut,flagOut: out std_logic);
+      Result,CarryOut: out std_logic);
 end component;
+
+-- Control Circuit
 
 component ControlCircuit is
  port(opcode: in std_logic_vector(2 downto 0);
       I1_Invert,I2_Invert: out std_logic;
 		Operation: out std_logic_vector(2 downto 0);
-	   CarryIn,flagIn: out std_logic);
+	   CarryIn: out std_logic);
 end component;
+
+-- 16 bit ALU
 
 component ALU_16BIT is
  port(I1_array,I2_array: in std_logic_vector(15 downto 0);
       opcode: in std_logic_vector(2 downto 0);
 		Result: out std_logic_vector(15 downto 0);
-		Overflow,Flag: out std_logic);
+		Overflow: out std_logic);
+end component;
+
+-- Component used for not and Geq
+
+component mux_16 is 
+	port(I1_array : in std_logic_vector(15 downto 0);
+		  Operation : in std_logic_vector(2 downto 0);
+		  Result: out std_logic_vector(15 downto 0));		  
 end component;
 
 end package components;
@@ -254,37 +263,45 @@ architecture AR_FULL_ADDER of FULL_ADDER is
   sum <= (final_I1 and not final_I2 and not CarryIn) or (not final_I1 and final_I2 and not CarryIn) or (not final_I1 and not final_I2 and CarryIn) or (final_I1 and final_I2 and CarryIn);
 end AR_FULL_ADDER;
 
---Entity of NOT
+--entity of NOT 0
 
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity NOT_Gate is
- port(I1,flagIn: in std_logic;
-		outNOT,flagOut: out std_logic);
-end NOT_Gate;
+entity NOT0 is
+ port(I1: in std_logic;
+      outNOT0: out std_logic);
+end NOT0;
 
+----architecture of NOT0
 
-architecture AR_NOT_Gate of NOT_Gate is 
+architecture AR_NOT0 of NOT0 is
 
 begin
-    process(I1,flagIn)
-    begin
-		if (flagIn = '1') then
-			if (I1 = '1') then
-            flagOut <= '0';
-			else
-            flagOut <= '1';
-			end if;
-		else
-		  flagOut <= '0';
-		end if;
-		
-    end process;
-	 
-	 outNOT <= '0';
-	 
-end AR_NOT_Gate;
+
+outNOT0 <= I1 nand '1';
+
+end architecture AR_NOT0;
+
+--entity of norm
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity norm is
+ port(I1: in std_logic;
+      out_norm: out std_logic);
+end norm;
+
+--architecture of norm
+
+architecture AR_norm of norm is
+
+begin
+
+out_norm <= I1;
+
+end architecture AR_norm;
 
 --entity of multiplexer 4to1 for ALU (CHANGE IT)
 
@@ -292,7 +309,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity mux4to1 is
- port(outAND,outOR,sum,outXOR,outNOT : in std_logic;
+ port(outAND,outOR,sum,outXOR,outNOT0,out_norm: in std_logic;
       Operation : in std_logic_vector(2 downto 0);
       Result: out std_logic);
 end mux4to1;
@@ -305,7 +322,8 @@ architecture AR_mux4to1 of mux4to1 is
    Result <= outAND when "000",
 	  outOR when "001",
 	  sum when "010",
-	  outNOT when "100",
+	  outNOT0 when "100",
+	  out_norm when "101",
 	  outXOR when others;
 end AR_mux4to1;
 
@@ -316,15 +334,15 @@ use ieee.std_logic_1164.all;
 use work.components.all;
 
 entity ALU_1BIT is
- port(I1,I2,CarryIn,I1_Invert,I2_Invert,flagIn : in std_logic;
+ port(I1,I2,CarryIn,I1_Invert,I2_Invert: in std_logic;
 		Operation:in std_logic_vector(2 downto 0);
-      Result,CarryOut,flagOut: out std_logic);
+      Result,CarryOut: out std_logic);
 end ALU_1BIT;
 
 --architecture of 1 Bit ALU
 
 architecture AR_ALU_1BIT of ALU_1BIT is
- signal notI1,notI2,final_I1,final_I2,outAND,outNOT,outOR,outXOR,sum: std_logic;
+ signal notI1,notI2,final_I1,final_I2,outAND,outOR,outXOR,outNOT0,out_norm,sum: std_logic;
  
  begin
   u0: NOT_I1 port map(I1,notI1);
@@ -335,8 +353,9 @@ architecture AR_ALU_1BIT of ALU_1BIT is
   u5: OR_Gate port map(final_I1,final_I2,outOR);
   u6: FULL_ADDER port map(CarryIn,final_I1,final_I2,sum,CarryOut);
   u7: XOR_Gate port map(final_I1,final_I2,outXOR);
-  u8: NOT_Gate port map(final_I1,flagIn,outNOT,flagOut);
-  u9: mux4to1 port map(outAND,outOR,sum,outXOR,outNOT,Operation,Result);
+  u8: NOT0 port map(final_I1,outNOT0);
+  u9: norm port map(final_I1,out_norm);
+  u10: mux4to1 port map(outAND,outOR,sum,outXOR,outNOT0,out_norm,Operation,Result);
   
 end AR_ALU_1BIT;
 
@@ -350,7 +369,7 @@ entity ControlCircuit is
  port(opcode: in std_logic_vector(2 downto 0);
       I1_Invert,I2_Invert: out std_logic;
 		Operation: out std_logic_vector(2 downto 0);
-	   CarryIn,flagIn: out std_logic);
+	   CarryIn: out std_logic);
 end ControlCircuit;	
 
 --architecture of Control Circuit
@@ -362,81 +381,100 @@ architecture AR_ControlCircuit of ControlCircuit is
 	 case opcode is
 	 --GEQ
 	  when "100" =>
-	 --NOT
-	  when "101" =>
-		Operation <= "100";
+		Operation <= "101";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '1';
+	 --NOT
+	  when "101" => 
+	   Operation <= "100";
+		I1_Invert <= '0';
+		I2_Invert <= '0';
+		CarryIn <= '0';
 	 --AND
 	  when "010" =>
 	   Operation <= "000";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 --OR
 	 when "011" =>
 	   Operation <= "001";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 --ADD
 	 when "000" =>
 	   Operation <= "010";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 --SUB
 	 when "001" =>
 	   Operation <= "010";
 		I1_Invert <= '0';
 		I2_Invert <= '1';
 		CarryIn <= '1';
-		flagIn <= '0';
 	 --NOR
 	 when "111" =>
 	   Operation <= "000";
 		I1_Invert <= '1';
 		I2_Invert <= '1';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 --XOR
 	 when "110" =>
 	   Operation <= "011";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 when others =>
 	   Operation <= "000";
 		I1_Invert <= '0';
 		I2_Invert <= '0';
 		CarryIn <= '0';
-		flagIn <= '0';
 	 end case;
 	 end process;
 
 end AR_ControlCircuit;
 
---Entity of GEQ
+--entity of geq and not component
 
---library ieee;
---use ieee.std_logic_signed.all;
+library ieee;
+use ieee.std_logic_1164.all;
 
---entity GEQ is
---port(I1: in std_logic_vector(15 downto 0);
---		outGEQ: out std_logic_vector(15 downto 0));
---end GEQ;
+entity mux_16 is 
 
---architecture AR_GEQ of GEQ is
+	port(I1_array : in std_logic_vector(15 downto 0);
+		  Operation : in std_logic_vector(2 downto 0);
+		  Result: out std_logic_vector(15 downto 0));
+		  
+end mux_16;
 
---architecture of GEQ
+--architecture of geq and not component
 
---end AR_GEQ;
+architecture AR_mux_16 of mux_16 is
+begin
+    process (I1_array, Operation)
+        variable temp_result : std_logic_vector(15 downto 0);
+    begin
+        case Operation is
+            when "101" =>             
+                temp_result(0) := '1';
+                for i in I1_array'range loop
+                    temp_result(0) := temp_result(0) and I1_array(i);
+                end loop;
+					 temp_result(15 downto 1) := (others => '0');
+                Result <= temp_result;
+				when "100" =>
+					 Result(0) <= not I1_array(15);
+					 Result(15 downto 1) <= (others => '0');
+            when others =>
+                Result <= I1_array;
+        end case;
+    end process;
+end AR_mux_16;
+
+
 
 --entity of 16 Bit ALU
 
@@ -448,39 +486,44 @@ entity ALU_16BIT is
  port(I1_array,I2_array: in std_logic_vector(15 downto 0);
       opcode: in std_logic_vector(2 downto 0);
 		Result: out std_logic_vector(15 downto 0);
-		Overflow,Flag: out std_logic);
+		Overflow: out std_logic);
 end ALU_16BIT;
 
 --architecture of 16 Bit ALU
 
 architecture AR_ALU_16BIT of ALU_16BIT is
 
-  signal insert_I1,insert_I2,CarryIn,flagIn: std_logic;
-  signal CarryOut,flagOut: std_logic_vector(0 to 15);
+  signal insert_I1,insert_I2,CarryIn: std_logic;
+  signal CarryOut: std_logic_vector(0 to 15);
+  signal Result_S: std_logic_vector(15 downto 0);
+  signal Result_mux:std_logic_vector(15 downto 0);
   signal Operation: std_logic_vector(2 downto 0);
   
   begin
   
-  a1:ControlCircuit port map(opcode,insert_I1,insert_I2,Operation,CarryIn,flagIn);
+  a1:ControlCircuit port map(opcode,insert_I1,insert_I2,Operation,CarryIn);
     
-  ALU0: ALU_1BIT port map(I1_array(0),I2_array(0),CarryIn,insert_I1,Insert_I2,flagIn,Operation,Result(0),CarryOut(0),flagOut(0));
-  ALU1: ALU_1BIT port map(I1_array(1),I2_array(1),CarryOut(0),insert_I1,insert_I2,flagOut(0),Operation,Result(1),CarryOut(1),flagOut(1));
-  ALU2: ALU_1BIT port map(I1_array(2),I2_array(2),CarryOut(1),insert_I1,insert_I2,flagOut(1),Operation,Result(2),CarryOut(2),flagOut(2));
-  ALU3: ALU_1BIT port map(I1_array(3),I2_array(3),CarryOut(2),insert_I1,insert_I2,flagOut(2),Operation,Result(3),CarryOut(3),flagOut(3));
-  ALU4: ALU_1BIT port map(I1_array(4),I2_array(4),CarryOut(3),insert_I1,insert_I2,flagOut(3),Operation,Result(4),CarryOut(4),flagOut(4));
-  ALU5: ALU_1BIT port map(I1_array(5),I2_array(5),CarryOut(4),insert_I1,insert_I2,flagOut(4),Operation,Result(5),CarryOut(5),flagOut(5));
-  ALU6: ALU_1BIT port map(I1_array(6),I2_array(6),CarryOut(5),insert_I1,insert_I2,flagOut(5),Operation,Result(6),CarryOut(6),flagOut(6));
-  ALU7: ALU_1BIT port map(I1_array(7),I2_array(7),CarryOut(6),insert_I1,insert_I2,flagOut(6),Operation,Result(7),CarryOut(7),flagOut(7));
-  ALU8: ALU_1BIT port map(I1_array(8),I2_array(8),CarryOut(7),insert_I1,insert_I2,flagOut(7),Operation,Result(8),CarryOut(8),flagOut(8));
-  ALU9: ALU_1BIT port map(I1_array(9),I2_array(9),CarryOut(8),insert_I1,insert_I2,flagOut(8),Operation,Result(9),CarryOut(9),flagOut(9));
-  ALU10: ALU_1BIT port map(I1_array(10),I2_array(10),CarryOut(9),insert_I1,insert_I2,flagOut(9),Operation,Result(10),CarryOut(10),flagOut(10)); 
-  ALU11: ALU_1BIT port map(I1_array(11),I2_array(11),CarryOut(10),insert_I1,insert_I2,flagOut(10),Operation,Result(11),CarryOut(11),flagOut(11));
-  ALU12: ALU_1BIT port map(I1_array(12),I2_array(12),CarryOut(11),insert_I1,insert_I2,flagOut(11),Operation,Result(12),CarryOut(12),flagOut(12));
-  ALU13: ALU_1BIT port map(I1_array(13),I2_array(13),CarryOut(12),insert_I1,insert_I2,flagOut(12),Operation,Result(13),CarryOut(13),flagOut(13));
-  ALU14: ALU_1BIT port map(I1_array(14),I2_array(14),CarryOut(13),insert_I1,insert_I2,flagOut(13),Operation,Result(14),CarryOut(14),flagOut(14));
-  ALU15: ALU_1BIT port map(I1_array(15),I2_array(15),CarryOut(14),insert_I1,insert_I2,flagOut(14),Operation,Result(15),CarryOut(15),flagOut(15));
+  ALU0: ALU_1BIT port map(I1_array(0),I2_array(0),CarryIn,insert_I1,insert_I2,Operation,Result_S(0),CarryOut(0));
+  ALU1: ALU_1BIT port map(I1_array(1),I2_array(1),CarryOut(0),insert_I1,insert_I2,Operation,Result_S(1),CarryOut(1));
+  ALU2: ALU_1BIT port map(I1_array(2),I2_array(2),CarryOut(1),insert_I1,insert_I2,Operation,Result_S(2),CarryOut(2));
+  ALU3: ALU_1BIT port map(I1_array(3),I2_array(3),CarryOut(2),insert_I1,insert_I2,Operation,Result_S(3),CarryOut(3));
+  ALU4: ALU_1BIT port map(I1_array(4),I2_array(4),CarryOut(3),insert_I1,insert_I2,Operation,Result_S(4),CarryOut(4));
+  ALU5: ALU_1BIT port map(I1_array(5),I2_array(5),CarryOut(4),insert_I1,insert_I2,Operation,Result_S(5),CarryOut(5));
+  ALU6: ALU_1BIT port map(I1_array(6),I2_array(6),CarryOut(5),insert_I1,insert_I2,Operation,Result_S(6),CarryOut(6));
+  ALU7: ALU_1BIT port map(I1_array(7),I2_array(7),CarryOut(6),insert_I1,insert_I2,Operation,Result_S(7),CarryOut(7));
+  ALU8: ALU_1BIT port map(I1_array(8),I2_array(8),CarryOut(7),insert_I1,insert_I2,Operation,Result_S(8),CarryOut(8));
+  ALU9: ALU_1BIT port map(I1_array(9),I2_array(9),CarryOut(8),insert_I1,insert_I2,Operation,Result_S(9),CarryOut(9));
+  ALU10: ALU_1BIT port map(I1_array(10),I2_array(10),CarryOut(9),insert_I1,insert_I2,Operation,Result_S(10),CarryOut(10)); 
+  ALU11: ALU_1BIT port map(I1_array(11),I2_array(11),CarryOut(10),insert_I1,insert_I2,Operation,Result_S(11),CarryOut(11));
+  ALU12: ALU_1BIT port map(I1_array(12),I2_array(12),CarryOut(11),insert_I1,insert_I2,Operation,Result_S(12),CarryOut(12));
+  ALU13: ALU_1BIT port map(I1_array(13),I2_array(13),CarryOut(12),insert_I1,insert_I2,Operation,Result_S(13),CarryOut(13));
+  ALU14: ALU_1BIT port map(I1_array(14),I2_array(14),CarryOut(13),insert_I1,insert_I2,Operation,Result_S(14),CarryOut(14));
+  ALU15: ALU_1BIT port map(I1_array(15),I2_array(15),CarryOut(14),insert_I1,insert_I2,Operation,Result_S(15),CarryOut(15));
   
-  Overflow <= CarryOut(14) xor CarryOut(15);
-  Flag <= flagOut(15);
+  MUX1: mux_16 port map(Result_S,opcode,Result_mux);
+  
+  Result <= Result_mux;
+  
+  XOR_1: XOR_Gate port map(CarryOut(14),CarryOut(15),Overflow);
 
 end AR_ALU_16BIT;
